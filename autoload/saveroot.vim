@@ -2,123 +2,97 @@ vim9script
 
 import autoload "util.vim"
 
-# If given directory is under the paths we are configured to find the root for
-def DirAllowed(path: string): bool
-    if !isdirectory(path)
-        return false
-    endif
-    for pattern in g:saveroot_paths
-        if path =~# glob2regpat(pattern)
-            if path[0] == '!'
-                return false
-            else
-                return true
-            endif
+def FindMarker(path: string): string
+    for marker in g:__saveroot_markers
+        var found: bool = false
+        var exclude: bool = false
+        var actual: string = marker
+
+        if actual[0] == '!'
+            exclude = true
+            actual = actual[1 :]
         endif
-    endfor
-    
-    return false
-enddef
 
-# Find marker that is a match for path, and return it
-def GetMarker(path: string): string
-    var match: bool = false
-    var ret: string = ""
-
-    for marker in g:saveroot_markers
-        var mtype: number = type(marker)
-        var actual: string = ""
-
-        if mtype == v:t_string
-            actual = marker[1 :]
-
-            if marker[0] == '='
-                match = util.MarkerIsPath(path, actual)
-            elseif marker[0] == '<'
-                match = util.MarkerAbovePath(path, actual, 100)
-            elseif marker[0] == '>'
-                match = util.MarkerUnderPath(path, actual)
-            else
-                util.Error("Invalid marker: " .. marker)
-                return ""
-            endif
-
-        elseif mtype == v:t_list
-            # If marker is a list then first element is the marker, after are args
-            actual = marker[0][1 :]
-
-            if marker[0][0] == '<'
-                # first is distance and second is the actual marker
-                match = util.MarkerAbovePath(path, actual, marker[1])
-            else
-                util.Error("Invalid type and marker: " .. marker)
-            endif
+        if actual[0] == '='
+            found = util.MarkerIsPath(path, actual[1 :])
+        elseif actual[0] == '>'
+            found = util.MarkerUnderPath(path, actual[1 :])
+        elseif actual[0] == '<'
+            found = util.MarkerAbovePath(path, actual[1 :])
         else
-            util.Error("Invalid type for marker: ", string(marker))
-            return ""
+            util.Error('Invalid marker: ' .. marker)
         endif
 
-        if match
-            ret = actual
-            break
+        if found
+            if exclude
+                break
+            else
+                return actual
+            endif
         endif
     endfor
-
-    return ret
+    return ""
 enddef
 
-# Returns absolute path of the root for the given directory.
-# Returns list in format of [<root>, <marker matched>].
-# If there is no match found then return value depends on g:saveroot_nomatch
-export def FindRoot(start: string): list<string>
-    var dir: string = start
+def FindRoot(starting_dir: string): list<string>
+    var next: string = fnamemodify(starting_dir, ':p:h')
 
     while true
-        var marker: string = GetMarker(dir)
+        var marker: string = FindMarker(next)
 
         if marker != ""
-            return [dir, marker]
+            return [next, marker]
         endif
 
-        var next: string = fnamemodify(dir, ":h")
-        if dir ==# next
+        var prev: string = next
+        next = fnamemodify(next, ':h')
+
+        if next == '.' || prev == next
             break
         endif
-        dir = next
     endwhile
 
-    if g:saveroot_nomatch == "none"
-        return ["", ""]
-    elseif g:saveroot_nomatch == "current"
-        return [start, ""]
-    elseif g:saveroot_nomatch[0] == "/"
-        return [g:saveroot_nomatch, ""]
-    else
-        util.Error("Invalid value for g:saveroot_nomatch -> " .. 
-            g:saveroot_nomatch)
-        return ["", ""]
-    endif
+    return null_list
 enddef
 
-export def GotoRoot(): void
-    if &buftype != ""
-        b:saveroot_marker = ""
-        b:saveroot_root = ""
-        return
+def PathAllowed(path: string): bool
+    if (!isdirectory(path) && !filereadable(path)) || empty(path)
+        return false
     endif
 
-    var dir: string = expand("%:p:h")
-    var root: string = ""
-    var marker: string = ""
+    for p in g:saveroot_paths
+        var actual: string = p
+        var exclude: bool = false
 
-    if DirAllowed(dir)
-        [root, marker] = FindRoot(dir)
+        if actual[0] == '!'
+            exclude = true
+            actual = actual[1 :]
+        endif
 
-        if root != ""
-            b:saveroot_marker = marker
-            b:saveroot_root = root
+        if path =~# glob2regpat(actual)
+            return !exclude
+        endif
+    endfor
 
-            execute("lcd " .. root)
+    return true
+enddef
+
+export def GotoRoot(path: string): void
+    if PathAllowed(path)
+        var ret: list<string> = FindRoot(path)
+
+        if ret != null_list
+            execute(g:saveroot_cd .. ' ' .. ret[0])
+
+            b:saveroot_marker = ret[1]
+            b:saveroot_root = ret[0]
+        else
+            if g:saveroot_nomatch == 'none'
+            elseif g:saveroot_match == 'current'
+                execute(g:saveroot_cd .. ' ' .. fnamemodify(path, 'p:h:'))
+            elseif g:saveroot_match[0] == '/'
+                execute(g:saveroot_cd .. ' ' .. g:saveroot_match)
+            endif
         endif
     endif
 enddef
