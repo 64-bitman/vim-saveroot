@@ -5,8 +5,10 @@ import autoload 'util.vim'
 var lines: list<string> = null_list
 
 def GetFile(): void
-    if lines == null_list
-        lines = readfile(g:saveroot_dir .. '/saveroot.txt')
+    var path: string = g:saveroot_dir .. '/saveroot.txt'
+
+    if lines == null_list && filereadable(path)
+        lines = readfile(path)
         sort(lines)
     endif
 enddef
