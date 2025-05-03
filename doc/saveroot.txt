@@ -1,0 +1,136 @@
+*saveroot.txt*	Heuristically change the working directory in Vim9script
+
+Author: Foxe Chen (chen.foxe AT gmail DOT COM)
+For Vim version 9.0 and above
+Last change: <April 19, 2025>
+
+==============================================================================
+CONTENTS                                        *saveroot-contents*
+
+     1. Overview ................................. |saveroot-overview|
+     2. Requirements ............................. |saveroot-installation|
+     3. Usage .................................... |saveroot-usage|
+     4. Configuration............................. |saveroot-configuration|
+     5. Commands ................................. |saveroot-commands|
+     5. Autocommands ............................. |saveroot-autocommands|
+    18. License .................................. |saveroot-license|
+
+==============================================================================
+1. Overview					*saveroot-overview*
+
+This plugin changes the current working directory using a given set of
+markers. These markers can be interpreted in more than one way, such as taking
+into account if it is a descendant or ancestor. In addition you can
+persistently save markers on the go into a database, without changing your
+vimrc.
+
+The git repository for this plugin is available at:
+
+      http://github.com/64-bitman/vim-saveroot
+
+==============================================================================
+2. Installation					*saveroot-installation*
+
+You can install this plugin directly from the git repository using the
+following steps:
+
+    $ mkdir -p $HOME/.vim/pack/some_name/start
+    $ cd $HOME/.vim/pack/some_name/start
+    $ git clone https://github.com/64-bitman/vim-saveroot
+
+Additionally, you can use an external plugin manager.
+
+If you are using Vim's built-in packadd functionality, it is recommended to
+put the plugin in the start folder.
+
+==============================================================================
+3. Usage					*saveroot-usage*
+
+By default vim-saveroot will automatically change the current working
+directory on any BufEnter events.
+
+This can be disabled and instead be done manually us
+
+==============================================================================
+4. Configuration				*saveroot-configuration*
+
+						*g:saveroot_markers*
+A list of markers to be used in order to find the working directory, each item
+in the list can be a string. All markers can have globs such as *, in order to
+match any character(s). Each string has an action character as the first
+character in the string, which can be either the following below:
+
+The '>' action specifies that the root has the given marker as a descendant.
+For example, if the current file is /home/user/Project/foo/bar/file.txt and
+there is a .git directory under the bar directory, then vim-saveroot will
+change the current working directory to /home/user/Project/foo, using the
+given marker below: >
+			">*/.git"
+<
+The '<' action specifies that the root has the given marker as a ancestor.
+For example, if the current file is /home/user/Project/foo/bar/file.txt, then
+the below marker will change the current working directory to /home/ >
+			"<home/*/Project"
+<
+
+
+==============================================================================
+5. Commands					*saveroot-commands*
+
+The following commands are provided:
+
+:SRcd						*:SRcd*
+			Change the current working directory.
+
+:SRsave {marker}				*:SRsave*
+			Save the given marker into the database, and change
+			the current working directory.
+
+:SRdel {marker}					*:SRdel*
+			Attempt to delete the given marker from the database,
+			and change the current working directory.
+
+:SRreload					*:SRreload*
+			Reload the database and any new changes.
+
+
+==============================================================================
+11. Autocommands				*lsp-autocmds*
+
+The below user autocommands are provided by vim-saveroot. They can be used as
+so, for example: >
+			autocmd User SaverootCD echo 'Changed the CWD'
+<
+						*SaverootCD*
+SaverootCD		Called when vim-saveroot automatically changes the
+			current working directory on a BufEnter event. Is not
+			called when the working directory is changed manually
+			by vim-saveroot.
+
+==============================================================================
+						*saveroot-license*
+MIT License
+
+Copyright (c) 2025 Foxe Chen
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+==============================================================================
+
+vim:tw=78:ts=8:noet:ft=help:norl:

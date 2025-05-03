@@ -56,6 +56,10 @@ def Reload()
     g:__saveroot_markers += save.GetSavedMarkers()
 enddef
 
+def g:SaverootFindRoot(start: string, markers: list<any>): list<string>
+    return saveroot.FindRoot(start, markers)
+enddef
+
 command -nargs=0 SRcd {
     DoGoto()
 }
@@ -88,8 +92,12 @@ Reload()
 augroup Saveroot
     au!
     au BufEnter * {
+        b:saveroot_marker = ""
+        b:saveroot_root = ""
+
         if g:saveroot_auto && &buftype == ""
             DoGoto()
+            doautocmd User SaverootCD
         endif
     }
 augroup END

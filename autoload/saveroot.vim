@@ -2,8 +2,8 @@ vim9script
 
 import autoload "util.vim"
 
-def FindMarker(path: string): string
-    for marker in g:__saveroot_markers
+def FindMarker(path: string, markers: list<any>): string
+    for marker in markers
         var found: bool = false
         var exclude: bool = false
         var actual: string = marker
@@ -34,11 +34,11 @@ def FindMarker(path: string): string
     return ""
 enddef
 
-def FindRoot(starting_dir: string): list<string>
-    var next: string = fnamemodify(starting_dir, ':p:h')
+export def FindRoot(start: string, markers: list<any>): list<string>
+    var next: string = fnamemodify(start, ':p:h')
 
     while true
-        var marker: string = FindMarker(next)
+        var marker: string = FindMarker(next, markers)
 
         if marker != ""
             return [next, marker]
@@ -79,7 +79,7 @@ enddef
 
 export def GotoRoot(path: string): void
     if PathAllowed(path)
-        var ret: list<string> = FindRoot(path)
+        var ret: list<string> = FindRoot(path, g:__saveroot_markers)
 
         if ret != null_list
             execute(g:saveroot_cd .. ' ' .. ret[0])
