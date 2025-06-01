@@ -88,9 +88,9 @@ export def GotoRoot(path: string): void
             b:saveroot_marker = ret[1]
         else
             if g:saveroot_nomatch == 'none'
-            elseif g:saveroot_match == 'current'
-                execute(g:saveroot_cd .. ' ' .. fnamemodify(path, 'p:h:'))
-            elseif g:saveroot_match[0] == '/'
+            elseif g:saveroot_nomatch == 'current'
+                execute(g:saveroot_cd .. ' ' .. fnamemodify(path, ':p:h'))
+            elseif g:saveroot_nomatch[0] == '/'
                 execute(g:saveroot_cd .. ' ' .. g:saveroot_match)
             endif
         endif
