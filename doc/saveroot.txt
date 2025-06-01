@@ -2,7 +2,7 @@
 
 Author: Foxe Chen (chen.foxe AT gmail DOT COM)
 For Vim version 9.0 and above
-Last change: <April 19, 2025>
+Last change: <May 31, 2025>
 
 ==============================================================================
 CONTENTS                                        *saveroot-contents*
@@ -19,8 +19,8 @@ CONTENTS                                        *saveroot-contents*
 1. Overview					*saveroot-overview*
 
 This plugin changes the current working directory using a given set of
-markers. These markers can be interpreted in more than one way, such as taking
-into account if it is a descendant or ancestor. In addition you can
+markers.  These markers can be interpreted in more than one way, such as taking
+into account if it is a descendant or ancestor.  In addition you can
 persistently save markers on the go into a database, without changing your
 vimrc.
 
@@ -49,31 +49,84 @@ put the plugin in the start folder.
 By default vim-saveroot will automatically change the current working
 directory on any BufEnter events.
 
-This can be disabled and instead be done manually us
+This can be disabled and instead be done manually, see |g:saveroot_auto|. To
+do it manually the function |SaverootFindRoot()| can be used.
 
 ==============================================================================
 4. Configuration				*saveroot-configuration*
 
 						*g:saveroot_markers*
 A list of markers to be used in order to find the working directory, each item
-in the list can be a string. All markers can have globs such as *, in order to
-match any character(s). Each string has an action character as the first
+in the list can be a string.  All markers can have globs such as *, in order
+to match any character(s).  Each string has an action character as the first
 character in the string, which can be either the following below:
 
 The '>' action specifies that the root has the given marker as a descendant.
 For example, if the current file is /home/user/Project/foo/bar/file.txt and
 there is a .git directory under the bar directory, then vim-saveroot will
 change the current working directory to /home/user/Project/foo, using the
-given marker below: >
-			">*/.git"
+given marker below:
+>
+	">*/.git"
 <
-The '<' action specifies that the root has the given marker as a ancestor.
-For example, if the current file is /home/user/Project/foo/bar/file.txt, then
-the below marker will change the current working directory to /home/ >
-			"<home/*/Project"
+The '<' action specifies that the root has the given marker as a ancestor. For
+example, if the current file is /home/user/Project/foo/bar/file.txt, then the
+below marker will change the current working directory to /home/
+>
+	"<home/*/Project"
 <
+The '=' action specifies that the root is the same as the given marker,
+including any parent directories.  For example, if the current file is
+/home/user/Project/foo/bar/file.txt, then the below marker will change the
+current working directory to /home/user/Project
+>
+	"=Project"
+<
+Additionally, putting an exclamation mark, "!", as the first character is the
+marker, ex. "!=directory/", will negate the action.
 
+						*g:saveroot_paths*
+A list of directories that the plugins checks if the current working directory
+is under, and if it is, then it will attempt to change the current working
+directory.  Specificing a exclamation mark as the first character negates it.
+The default value is ['/', '*'].
 
+						*g:saveroot_nomatch*
+Can be a value of either "none", "current", or a specific directory, which
+determines what to do when there is no match to use for the current working
+directory.  Specifying "none" results in no action being taken.  Specifying
+"current" uses the parent directory of the current working directory, similar
+to 'autochdir'.  If the value starts with a slash, then it is taken as a path
+which the current working directory will be. The default value is "none".
+
+						*g:saveroot_auto*
+Specifies whether to automatically create autocommands automatically on
+startup.  The default value is true.
+
+						*g:saveroot_cd*
+Specifies the command to use to change the current working directory.  The
+default value is "lcd".
+
+						*g:saveroot_dir*
+Specifies the directory to store the database file that stores saved
+locations.  The default is the value of $MYVIMDIR.
+
+						*b:saveroot_root*
+A string that is set when saveroot changes the current working directory,
+which is its value.
+
+						*b:saveroot_marker*
+A string that is set when saveroot changes the current working directory, it
+is set the marker that was matched for the current working directory.
+
+						*SaverootFindRoot()*
+The SaverootFindRoot() function returns a list of two strings. The first
+string is the matched directory, and the second is the marker that was
+matched. It takes two arguments, the first argument is the start path to start
+looking from, and the second is the list of markers to use. For example:
+>
+	echo SaverootFindRoot("/srv/git", g:saveroot_markers)
+<
 ==============================================================================
 5. Commands					*saveroot-commands*
 
@@ -95,15 +148,16 @@ The following commands are provided:
 
 
 ==============================================================================
-11. Autocommands				*lsp-autocmds*
+11. Autocommands				*saveroot-autocmds*
 
 The below user autocommands are provided by vim-saveroot. They can be used as
-so, for example: >
-			autocmd User SaverootCD echo 'Changed the CWD'
+so, for example:
+>
+	autocmd User SaverootCD echo 'CWD is now: ' .. b:saveroot_root
 <
 						*SaverootCD*
 SaverootCD		Called when vim-saveroot automatically changes the
-			current working directory on a BufEnter event. Is not
+			current working directory on a BufEnter event.  Is not
 			called when the working directory is changed manually
 			by vim-saveroot.
 
@@ -133,4 +187,4 @@ SOFTWARE.
 
 ==============================================================================
 
-vim:tw=78:ts=8:noet:ft=help:norl:
+vim:tw=78:ts=8:noet:ft=help:norl:js

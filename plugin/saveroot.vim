@@ -89,17 +89,19 @@ command -nargs=0 SRreload Reload()
 
 Reload()
 
-augroup Saveroot
-    au!
-    au BufEnter * {
-        b:saveroot_marker = ""
-        b:saveroot_root = ""
+if g:saveroot_auto
+    augroup Saveroot
+        au!
+        au BufEnter * {
+            b:saveroot_marker = ""
+            b:saveroot_root = ""
 
-        if g:saveroot_auto && &buftype == ""
-            DoGoto()
-            doautocmd User SaverootCD
-        endif
-    }
-augroup END
+            if &buftype == ""
+                DoGoto()
+                doautocmd User SaverootCD
+            endif
+        }
+    augroup END
+endif
 
 # vim: sw=4 tw=4 et

@@ -84,8 +84,8 @@ export def GotoRoot(path: string): void
         if ret != null_list
             execute(g:saveroot_cd .. ' ' .. ret[0])
 
-            b:saveroot_marker = ret[1]
             b:saveroot_root = ret[0]
+            b:saveroot_marker = ret[1]
         else
             if g:saveroot_nomatch == 'none'
             elseif g:saveroot_match == 'current'
