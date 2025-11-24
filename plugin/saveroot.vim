@@ -98,7 +98,7 @@ if g:saveroot_auto
 
             if &buftype == ""
                 DoGoto()
-                doautocmd User SaverootCD
+                silent! doautocmd User SaverootCD
             endif
         }
     augroup END
